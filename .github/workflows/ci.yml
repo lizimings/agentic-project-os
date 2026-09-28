@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Configure test Git identity
+        run: |
+          git config --global user.name "Agentic Project OS CI"
+          git config --global user.email "ci@example.invalid"
+      - name: Verify workspace
+        run: pnpm check
+
+  windows-package:
+    name: Windows installer and portable
+    needs: verify
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22.22.0
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build Windows artifacts
+        run: pnpm --filter @pcc/desktop make
+      - name: Write SHA-256 manifest
+        shell: pwsh
+        run: |
+          Get-ChildItem apps/desktop/out/make -Recurse -File |
+            Get-FileHash -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash)  $($_.Path.Substring($env:GITHUB_WORKSPACE.Length + 1))" } |
+            Set-Content apps/desktop/out/make/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v7
+        with:
+          name: agentic-project-os-windows-${{ github.sha }}
+          path: apps/desktop/out/make/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

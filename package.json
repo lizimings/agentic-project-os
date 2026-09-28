@@ -1,0 +1,32 @@
+{
+  "name": "agentic-project-os",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "Agent-native project management: a board that drives human and AI collaboration",
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "pnpm --filter @pcc/web dev",
+    "dev:daemon": "pnpm --filter @pcc/daemon dev",
+    "build": "turbo build --concurrency=2",
+    "test": "turbo test --concurrency=2",
+    "typecheck": "turbo typecheck --concurrency=2",
+    "check": "pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "electron-winstaller",
+      "esbuild"
+    ]
+  }
+}

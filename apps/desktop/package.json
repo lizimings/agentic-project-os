@@ -1,0 +1,30 @@
+{
+  "name": "@pcc/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "productName": "Agentic Project OS",
+  "type": "commonjs",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "pnpm build && electron .",
+    "build": "tsup src/main.ts src/preload.ts --format cjs --platform node --external electron --sourcemap --clean",
+    "typecheck": "tsc --noEmit",
+    "prepare:resources": "pnpm --filter @pcc/web build && pnpm --filter @pcc/daemon build:desktop && node scripts/prepare-resources.mjs",
+    "package": "pnpm build && pnpm prepare:resources && electron-forge package",
+    "make": "pnpm build && pnpm prepare:resources && node scripts/make-windows.mjs",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "7.11.2",
+    "@electron-forge/core": "7.11.2",
+    "@electron-forge/maker-squirrel": "7.11.2",
+    "@electron-forge/maker-zip": "7.11.2",
+    "@electron-forge/shared-types": "7.11.2",
+    "@types/node": "^24.3.0",
+    "electron": "43.4.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.11"
+  }
+}
