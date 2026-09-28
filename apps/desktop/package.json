@@ -10,7 +10,7 @@
     "dev": "pnpm build && electron .",
     "build": "tsup src/main.ts src/preload.ts --format cjs --platform node --external electron --sourcemap --clean",
     "typecheck": "tsc --noEmit",
-    "prepare:resources": "pnpm --filter @pcc/web build && pnpm --filter @pcc/daemon build:desktop && node scripts/prepare-resources.mjs",
+    "prepare:resources": "pnpm --dir ../.. build && pnpm --filter @pcc/daemon build:desktop && node scripts/prepare-resources.mjs",
     "package": "pnpm build && pnpm prepare:resources && electron-forge package",
     "make": "pnpm build && pnpm prepare:resources && node scripts/make-windows.mjs",
     "test": "vitest run"
