@@ -1,16 +1,24 @@
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { registerDesktopIpc, trustedRenderer } from "./ipc";
 
+const testPaths = {
+  documents: path.resolve("fixtures/home/Documents"),
+  repository: path.resolve("fixtures/work/repo"),
+  requested: path.resolve("fixtures/source"),
+  userData: path.resolve("fixtures/home/AppData"),
+};
+
 function fixture() {
   const handlers = new Map<string, (...args: any[]) => any>();
-  const showOpenDialog = vi.fn(async () => ({ canceled: false, filePaths: ["C:\\work\\repo"] }));
+  const showOpenDialog = vi.fn(async () => ({ canceled: false, filePaths: [testPaths.repository] }));
   const openPath = vi.fn(async () => "");
   const restartApp = vi.fn();
   let tray = true;
   let openAtLogin = false;
   const app = {
     isPackaged: false,
-    getPath: vi.fn((name: string) => name === "documents" ? "C:\\Users\\demo\\Documents" : "C:\\Users\\demo\\AppData"),
+    getPath: vi.fn((name: string) => name === "documents" ? testPaths.documents : testPaths.userData),
     getVersion: vi.fn(() => "0.1.0"),
     setLoginItemSettings: vi.fn((input: { openAtLogin: boolean }) => { openAtLogin = input.openAtLogin; }),
     getLoginItemSettings: vi.fn(() => ({ openAtLogin })),
@@ -42,13 +50,13 @@ describe("desktop IPC boundary", () => {
   it("opens an operating-system directory picker and validates the default path", async () => {
     const { handlers, showOpenDialog, event } = fixture();
     const select = handlers.get("pcc:select-directory")!;
-    await expect(select(event, { defaultPath: "C:\\source" })).resolves.toEqual({ canceled: false, path: "C:\\work\\repo" });
+    await expect(select(event, { defaultPath: testPaths.requested })).resolves.toEqual({ canceled: false, path: testPaths.repository });
     expect(showOpenDialog).toHaveBeenCalledWith(null, expect.objectContaining({
-      defaultPath: "C:\\source",
+      defaultPath: testPaths.requested,
       properties: ["openDirectory", "createDirectory", "dontAddToRecent"],
     }));
     await select(event, { defaultPath: "..\\relative" });
-    expect(showOpenDialog).toHaveBeenLastCalledWith(null, expect.objectContaining({ defaultPath: "C:\\Users\\demo\\Documents" }));
+    expect(showOpenDialog).toHaveBeenLastCalledWith(null, expect.objectContaining({ defaultPath: testPaths.documents }));
   });
 
   it("applies runtime preferences and rejects untrusted or relative path calls", async () => {
